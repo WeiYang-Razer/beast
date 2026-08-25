@@ -5,3 +5,12 @@ bin64/
 Win32/
 x64/
 
+
+# wyvrnpm
+wyvrn_internal/
+wyvrn.lock
+wyvrn.local.json
+build/
+CMakePresets.json
+CMakeUserPresets.json
+*.zip

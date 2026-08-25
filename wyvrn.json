@@ -1,0 +1,41 @@
+{
+  "name": "boost-beast",
+  "version": "1.92.0.1",
+  "schemaVersion": 2,
+  "description": "Boost.Beast (Razer fork) - HTTP and WebSocket built on Boost.Asio in C++11. Header-only; depends on the wyvrnpm boost package.",
+  "kind": "HeaderOnlyLib",
+  "cmakePackageName": "beast",
+
+  "dependencies": {
+    "boost": "^1.92.0.0"
+  },
+
+  "compatibility": {
+    "arch":             "any",
+    "compiler":         "exact",
+    "compiler.version": "any",
+    "compiler.cppstd":  "lte",
+    "compiler.runtime": "any"
+  },
+
+  "conf": {
+    "cmake": {
+      "cache": {
+        "BUILD_TESTING":              "OFF",
+        "BOOST_BEAST_BUILD_TESTS":    "OFF",
+        "BOOST_BEAST_BUILD_EXAMPLES": "OFF",
+        "BOOST_BEAST_BUILD_FUZZERS":  "OFF",
+        "BOOST_BEAST_INSTALL":        "ON",
+        "BOOST_SRC_DIR":              "WYVRN_USE_BOOST_PACKAGE"
+      }
+    }
+  },
+
+  "build": {
+    "system":       "cmake",
+    "generator":    ["Ninja Multi-Config", "Visual Studio 17 2022"],
+    "configs":      ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+    "installDir":   "install",
+    "sourceSubdir": "."
+  }
+}

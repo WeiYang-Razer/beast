@@ -1,0 +1,35 @@
+# Version control / editor / local
+.git/
+.gitignore
+.gitattributes
+.gitmodules
+.github/
+.vscode/
+.idea/
+.claude/
+
+# Local build output + wyvrnpm-generated files
+build/
+wyvrn_internal/
+wyvrn.lock
+wyvrn.local.json
+CMakePresets.json
+CMakeUserPresets.json
+*.tmp
+*.log
+*.zip
+
+# HeaderOnlyLib: ship include/ + licence + readme + CMakeLists + manifest only
+test/
+example/
+doc/
+tools/
+meta/
+build.jam
+index.html
+CHANGELOG.md
+CONTRIBUTING.md
+bin/
+bin64/
+Win32/
+x64/

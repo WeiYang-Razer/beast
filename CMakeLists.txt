@@ -39,6 +39,7 @@ option(BOOST_BEAST_BUILD_TESTS "Build boost::beast tests" ${BUILD_TESTING})
 option(BOOST_BEAST_BUILD_FUZZERS "Build boost::beast fuzzers" OFF)
 option(BOOST_BEAST_BUILD_EXAMPLES "Build boost::beast examples" ${BOOST_BEAST_IS_ROOT})
 option(BOOST_BEAST_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
+option(BOOST_BEAST_INSTALL "Generate install/export rules for boost::beast (standalone builds only)" ${BOOST_BEAST_IS_ROOT})
 
 # Check if environment variable BOOST_SRC_DIR is set
 if (NOT DEFINED BOOST_SRC_DIR AND DEFINED ENV{BOOST_SRC_DIR})
@@ -127,7 +128,9 @@ if (BOOST_BEAST_IS_ROOT)
         set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${BOOST_SRC_DIR}/tools/cmake/include")
     else ()
         # From Boost Package
-        find_package(Boost REQUIRED COMPONENTS filesystem scope json)
+        find_package(Boost CONFIG REQUIRED
+            COMPONENTS filesystem scope json
+            OPTIONAL_COMPONENTS ${BOOST_BEAST_INCLUDE_LIBRARIES})
         foreach (BOOST_INCLUDE_LIBRARY ${BOOST_INCLUDE_LIBRARIES})
             if (NOT TARGET Boost::${BOOST_INCLUDE_LIBRARY})
                 add_library(Boost::${BOOST_INCLUDE_LIBRARY} ALIAS Boost::headers)
@@ -144,7 +147,9 @@ endif ()
 #-------------------------------------------------
 add_library(boost_beast INTERFACE)
 add_library(Boost::beast ALIAS boost_beast)
-target_include_directories(boost_beast INTERFACE include)
+target_include_directories(boost_beast INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
 target_link_libraries(boost_beast INTERFACE ${BOOST_BEAST_DEPENDENCIES})
 target_compile_features(boost_beast INTERFACE cxx_std_11)
 
@@ -153,6 +158,48 @@ if (BOOST_BEAST_IS_ROOT)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
     source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include/boost PREFIX "" FILES ${BOOST_BEAST_HEADERS})
     target_sources(boost_beast PRIVATE ${BOOST_BEAST_HEADERS} build.jam)
+endif ()
+
+#-------------------------------------------------
+#
+# Install / export (standalone package builds)
+#
+#-------------------------------------------------
+# Produces <prefix>/include/boost/beast/... plus
+# <prefix>/lib/cmake/beast/{beastConfig,beastConfigVersion,beastTargets}.cmake
+# so consumers can `find_package(beast CONFIG)` and link `beast::beast`
+# (alias `Boost::beast` is created when not already defined).
+if (BOOST_BEAST_INSTALL AND BOOST_BEAST_IS_ROOT)
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+
+    set(BOOST_BEAST_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/beast)
+    set_target_properties(boost_beast PROPERTIES EXPORT_NAME beast)
+
+    install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(TARGETS boost_beast EXPORT beastTargets)
+    install(EXPORT beastTargets
+        NAMESPACE beast::
+        FILE beastTargets.cmake
+        DESTINATION ${BOOST_BEAST_INSTALL_CMAKEDIR})
+
+    # Boost components the exported target links against (find_dependency list)
+    list(JOIN BOOST_BEAST_INCLUDE_LIBRARIES " " BOOST_BEAST_CONFIG_COMPONENTS)
+    configure_package_config_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/beastConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/beastConfig.cmake
+        INSTALL_DESTINATION ${BOOST_BEAST_INSTALL_CMAKEDIR})
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/beastConfigVersion.cmake
+        VERSION ${BOOST_BEAST_VERSION}
+        COMPATIBILITY SameMajorVersion
+        ARCH_INDEPENDENT)
+    install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/beastConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/beastConfigVersion.cmake
+        DESTINATION ${BOOST_BEAST_INSTALL_CMAKEDIR})
+    install(FILES LICENSE_1_0.txt README.md
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/beast)
 endif ()
 #-------------------------------------------------
 #

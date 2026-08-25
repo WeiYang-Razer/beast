@@ -1,0 +1,20 @@
+@PACKAGE_INIT@
+
+# Boost.Beast is header-only but links against a set of Boost interface
+# targets (Boost::asio, Boost::system, ...). Pull them in from the Boost
+# CMake package (wyvrnpm "boost" dependency) before importing beastTargets.
+include(CMakeFindDependencyMacro)
+set(_beast_boost_components @BOOST_BEAST_CONFIG_COMPONENTS@)
+find_dependency(Boost CONFIG COMPONENTS ${_beast_boost_components})
+unset(_beast_boost_components)
+
+include("${CMAKE_CURRENT_LIST_DIR}/beastTargets.cmake")
+
+# Convenience alias matching the upstream target name. Not created when a
+# full Boost package already provides its own Boost::beast.
+if (NOT TARGET Boost::beast)
+    add_library(Boost::beast INTERFACE IMPORTED)
+    set_target_properties(Boost::beast PROPERTIES INTERFACE_LINK_LIBRARIES beast::beast)
+endif ()
+
+check_required_components(beast)
